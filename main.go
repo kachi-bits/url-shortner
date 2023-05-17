@@ -17,7 +17,9 @@ var (
 	redisAddr     = os.Getenv("REDIS_ADDR")
 	redisUsername = os.Getenv("REDIS_USERNAME")
 	redisPassword = os.Getenv("REDIS_PASSWORD")
-	redisDB       = os.Getenv("DB")
+	redisDB       = os.Getenv("REDIS_DB")
+	admin_url     = os.Getenv("LISTEN_ADMIN")
+	redirect_url  = os.Getenv("LISTEN_REDIRECT")
 )
 
 func main() {
@@ -37,11 +39,17 @@ func main() {
 	errChan := make(chan int, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		presentation.NewAdmin(service).Start(":7000")
+		if admin_url == "" {
+			admin_url = ":9001"
+		}
+		presentation.NewAdmin(service).Start(admin_url)
 		errChan <- 0
 	}()
 	go func() {
-		presentation.NewHttpRedirect(service).Start(":8000")
+		if redirect_url == "" {
+			redirect_url = ":9000"
+		}
+		presentation.NewHttpRedirect(service).Start(redirect_url)
 		errChan <- 0
 	}()
 	for {
